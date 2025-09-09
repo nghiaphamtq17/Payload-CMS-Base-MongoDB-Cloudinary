@@ -43,23 +43,31 @@ export const Media: CollectionConfig = {
         const incoming: any = (req as any)?.file || (data as any)?.file
         if (!incoming || !incoming.buffer) return data
 
-        const fileName = incoming?.filename || incoming?.originalname || 'upload'
         const timestamp = Math.floor(Date.now() / 1000)
-        // Using unsigned-like direct upload API via REST
-        const form = new FormData()
-        form.append('file', new Blob([incoming.buffer]))
-        form.append('api_key', API_KEY)
-        form.append('timestamp', String(timestamp))
-        form.append('upload_preset', '')
+        const fileBase64 = `data:${incoming.mimetype || 'application/octet-stream'};base64,${Buffer.from(
+          incoming.buffer,
+        ).toString('base64')}`
 
-        // Signed upload
+        // Signed upload (minimal params)
         const signature = signParams({ timestamp })
-        form.append('signature', signature)
+        const formBody = new URLSearchParams()
+        formBody.set('file', fileBase64)
+        formBody.set('api_key', API_KEY)
+        formBody.set('timestamp', String(timestamp))
+        formBody.set('signature', signature)
 
-        const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+        const uploadEndpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`
+        const res = await fetch(uploadEndpoint, {
           method: 'POST',
-          body: form as any,
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: formBody.toString(),
         })
+        if (!res.ok) {
+          const errText = await res.text().catch(() => '')
+          throw new Error(`Cloudinary upload failed: ${res.status} ${res.statusText} ${errText}`)
+        }
         const result = await res.json()
 
         // Persist Cloudinary identifiers and canonical secure URL
