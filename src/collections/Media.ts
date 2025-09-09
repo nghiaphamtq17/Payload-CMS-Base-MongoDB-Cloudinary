@@ -48,20 +48,25 @@ export const Media: CollectionConfig = {
           incoming.buffer,
         ).toString('base64')}`
 
-        // Signed upload (minimal params)
-        const signature = signParams({ timestamp })
+        const uploadEndpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`
         const formBody = new URLSearchParams()
         formBody.set('file', fileBase64)
-        formBody.set('api_key', API_KEY)
-        formBody.set('timestamp', String(timestamp))
-        formBody.set('signature', signature)
 
-        const uploadEndpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`
+        const unsignedPreset = process.env.CLOUDINARY_UPLOAD_PRESET || ''
+        if (unsignedPreset) {
+          // Unsigned upload per Cloudinary docs
+          formBody.set('upload_preset', unsignedPreset)
+        } else {
+          // Signed upload (minimal params)
+          formBody.set('api_key', API_KEY)
+          formBody.set('timestamp', String(timestamp))
+          const signature = signParams({ timestamp })
+          formBody.set('signature', signature)
+        }
+
         const res = await fetch(uploadEndpoint, {
           method: 'POST',
-          headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-          },
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
           body: formBody.toString(),
         })
         if (!res.ok) {
