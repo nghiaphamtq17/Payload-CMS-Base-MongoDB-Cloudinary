@@ -18,6 +18,7 @@ const dirname = path.dirname(filename)
 const CLOUD_NAME = process.env.CLOUDINARY_CLOUD_NAME || ''
 const API_KEY = process.env.CLOUDINARY_API_KEY || ''
 const API_SECRET = process.env.CLOUDINARY_API_SECRET || ''
+const LOG_CLOUDINARY = String(process.env.LOG_CLOUDINARY).toLowerCase() === 'true'
 
 const signParams = (params: Record<string, string | number | boolean | undefined>) => {
   const entries = Object.entries(params)
@@ -42,6 +43,16 @@ export const Media: CollectionConfig = {
         // When admin uploads, Payload sets data.file (buffer + metadata)
         const incoming: any = (req as any)?.file || (data as any)?.file
         if (!incoming || !incoming.buffer) return data
+
+        if (LOG_CLOUDINARY) {
+          try {
+            console.info('[cloudinary] incoming file', {
+              name: incoming?.originalname || incoming?.filename,
+              mimetype: incoming?.mimetype,
+              size: incoming?.size || (incoming?.buffer ? incoming.buffer.length : 0),
+            })
+          } catch {}
+        }
 
         const timestamp = Math.floor(Date.now() / 1000)
         const fileBase64 = `data:${incoming.mimetype || 'application/octet-stream'};base64,${Buffer.from(
@@ -71,9 +82,32 @@ export const Media: CollectionConfig = {
         })
         if (!res.ok) {
           const errText = await res.text().catch(() => '')
-          throw new Error(`Cloudinary upload failed: ${res.status} ${res.statusText} ${errText}`)
+          if (LOG_CLOUDINARY) {
+            console.error('[cloudinary] upload failed', {
+              status: res.status,
+              statusText: res.statusText,
+              endpoint: uploadEndpoint,
+              unsignedPreset: Boolean(unsignedPreset),
+              hasApiKey: Boolean(API_KEY),
+              hasSecret: Boolean(API_SECRET),
+              payloadBytes: formBody.toString().length,
+              body: errText?.slice(0, 2000),
+            })
+          }
+          throw new Error(`Cloudinary upload failed: ${res.status} ${res.statusText}`)
         }
         const result = await res.json()
+
+        if (LOG_CLOUDINARY) {
+          try {
+            console.info('[cloudinary] upload success', {
+              public_id: result?.public_id,
+              version: result?.version,
+              resource_type: result?.resource_type,
+              bytes: result?.bytes,
+            })
+          } catch {}
+        }
 
         // Persist Cloudinary identifiers and canonical secure URL
         data.filename = result.public_id
