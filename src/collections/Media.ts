@@ -41,8 +41,24 @@ export const Media: CollectionConfig = {
       async ({ data, req, originalDoc, operation }) => {
         // Handle only create/update with new file buffer
         // When admin uploads, Payload sets data.file (buffer + metadata)
-        const incoming: any = (req as any)?.file || (data as any)?.file
-        if (!incoming || !incoming.buffer) return data
+        let incoming: any = (req as any)?.file || (data as any)?.file || (req as any)?.files?.file
+        // Some payload parsers provide file as { data: Buffer, mimetype, filename }
+        if (incoming && !incoming.buffer && incoming.data) {
+          incoming = { ...incoming, buffer: incoming.data }
+        }
+        if (!incoming || !incoming.buffer) {
+          if (LOG_CLOUDINARY) {
+            try {
+              console.warn('[cloudinary] no incoming file buffer. Keys:', {
+                hasReqFile: Boolean((req as any)?.file),
+                hasReqFiles: Boolean((req as any)?.files),
+                hasDataFile: Boolean((data as any)?.file),
+                incomingType: typeof incoming,
+              })
+            } catch {}
+          }
+          return data
+        }
 
         if (LOG_CLOUDINARY) {
           try {
@@ -58,6 +74,16 @@ export const Media: CollectionConfig = {
         const fileBase64 = `data:${incoming.mimetype || 'application/octet-stream'};base64,${Buffer.from(
           incoming.buffer,
         ).toString('base64')}`
+
+        if (!CLOUD_NAME || (!process.env.CLOUDINARY_UPLOAD_PRESET && (!API_KEY || !API_SECRET))) {
+          console.error('[cloudinary] missing env', {
+            CLOUD_NAME: Boolean(CLOUD_NAME),
+            HAS_UPLOAD_PRESET: Boolean(process.env.CLOUDINARY_UPLOAD_PRESET),
+            HAS_API_KEY: Boolean(API_KEY),
+            HAS_API_SECRET: Boolean(API_SECRET),
+          })
+          throw new Error('Cloudinary env is not configured')
+        }
 
         const uploadEndpoint = `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`
         const formBody = new URLSearchParams()
@@ -75,28 +101,37 @@ export const Media: CollectionConfig = {
           formBody.set('signature', signature)
         }
 
-        const res = await fetch(uploadEndpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-          body: formBody.toString(),
-        })
-        if (!res.ok) {
-          const errText = await res.text().catch(() => '')
-          if (LOG_CLOUDINARY) {
-            console.error('[cloudinary] upload failed', {
-              status: res.status,
-              statusText: res.statusText,
-              endpoint: uploadEndpoint,
-              unsignedPreset: Boolean(unsignedPreset),
-              hasApiKey: Boolean(API_KEY),
-              hasSecret: Boolean(API_SECRET),
-              payloadBytes: formBody.toString().length,
-              body: errText?.slice(0, 2000),
-            })
+        let result: any
+        try {
+          const res = await fetch(uploadEndpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+            body: formBody.toString(),
+          })
+          if (!res.ok) {
+            const errText = await res.text().catch(() => '')
+            if (LOG_CLOUDINARY) {
+              console.error('[cloudinary] upload failed', {
+                status: res.status,
+                statusText: res.statusText,
+                endpoint: uploadEndpoint,
+                unsignedPreset: Boolean(unsignedPreset),
+                hasApiKey: Boolean(API_KEY),
+                hasSecret: Boolean(API_SECRET),
+                payloadBytes: formBody.toString().length,
+                body: errText?.slice(0, 2000),
+              })
+            }
+            throw new Error(`Cloudinary upload failed: ${res.status} ${res.statusText}`)
           }
-          throw new Error(`Cloudinary upload failed: ${res.status} ${res.statusText}`)
+          result = await res.json()
+        } catch (e: any) {
+          console.error('[cloudinary] upload exception', {
+            message: e?.message,
+            stack: e?.stack,
+          })
+          throw e
         }
-        const result = await res.json()
 
         if (LOG_CLOUDINARY) {
           try {
