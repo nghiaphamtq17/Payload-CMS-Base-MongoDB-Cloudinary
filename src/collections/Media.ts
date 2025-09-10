@@ -103,6 +103,21 @@ export const Media: CollectionConfig = {
 
         let result: any
         try {
+          // Test connectivity first
+          if (LOG_CLOUDINARY) {
+            try {
+              const testRes = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/ping`, {
+                method: 'GET',
+              })
+              console.info('[cloudinary] ping test', {
+                status: testRes.status,
+                statusText: testRes.statusText,
+              })
+            } catch (e: any) {
+              console.warn('[cloudinary] ping failed', { message: e?.message })
+            }
+          }
+
           const res = await fetch(uploadEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -242,8 +257,8 @@ export const Media: CollectionConfig = {
     },
   ],
   upload: {
-    // Upload to the public/media directory in Next.js making them publicly accessible even outside of Payload
-    staticDir: path.resolve(dirname, '../../public/media'),
+    // Disable local storage since we're using Cloudinary
+    // staticDir: path.resolve(dirname, '../../public/media'),
     adminThumbnail: ({ doc }) => {
       const url = typeof (doc as any)?.url === 'string' ? (doc as any).url : ''
       return url
