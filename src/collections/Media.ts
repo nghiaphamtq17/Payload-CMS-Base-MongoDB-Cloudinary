@@ -258,7 +258,7 @@ export const Media: CollectionConfig = {
   ],
   upload: {
     // Disable local storage since we're using Cloudinary
-    // staticDir: path.resolve(dirname, '../../public/media'),
+    disableLocalStorage: true,
     adminThumbnail: ({ doc }) => {
       const url = typeof (doc as any)?.url === 'string' ? (doc as any).url : ''
       return url
