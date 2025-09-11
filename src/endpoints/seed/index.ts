@@ -9,6 +9,8 @@ import { imageHero1 } from './image-hero-1'
 import { post1 } from './post-1'
 import { post2 } from './post-2'
 import { post3 } from './post-3'
+import { skillCategoriesData } from './skill-categories'
+import { skillsData } from './skills'
 
 const collections: CollectionSlug[] = [
   'categories',
@@ -18,6 +20,8 @@ const collections: CollectionSlug[] = [
   'forms',
   'form-submissions',
   'search',
+  'skill-categories',
+  'skills',
 ]
 const globals: GlobalSlug[] = ['header', 'footer']
 
@@ -338,6 +342,53 @@ export const seed = async ({
       },
     }),
   ])
+
+  payload.logger.info(`— Seeding skill categories...`)
+
+  // Create skill categories first
+  const skillCategories = await Promise.all(
+    skillCategoriesData.map((categoryData) =>
+      payload.create({
+        collection: 'skill-categories',
+        data: categoryData,
+      }),
+    ),
+  )
+
+  payload.logger.info(`— Seeding skills...`)
+
+  // Create skills with category relationships
+  const skills = await Promise.all(
+    skillsData.map((skillData) => {
+      const category = skillCategories.find((cat) => cat.slug === skillData.categorySlug)
+      const { categorySlug, ...skillDataWithoutSlug } = skillData
+
+      return payload.create({
+        collection: 'skills',
+        data: {
+          ...skillDataWithoutSlug,
+          category: category?.id,
+        },
+      })
+    }),
+  )
+
+  payload.logger.info(`— Updating skill categories with skills...`)
+
+  // Update skill categories with their skills
+  await Promise.all(
+    skillCategories.map((category) => {
+      const categorySkills = skills.filter((skill) => skill.category === category.id)
+
+      return payload.update({
+        id: category.id,
+        collection: 'skill-categories',
+        data: {
+          skills: categorySkills.map((skill) => skill.id),
+        },
+      })
+    }),
+  )
 
   payload.logger.info('Seeded database successfully!')
 }

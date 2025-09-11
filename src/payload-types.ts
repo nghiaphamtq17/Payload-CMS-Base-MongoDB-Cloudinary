@@ -71,7 +71,10 @@ export interface Config {
     posts: Post;
     media: Media;
     categories: Category;
+    skills: Skill;
+    'skill-categories': SkillCategory;
     users: User;
+    customs: Custom;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -87,7 +90,10 @@ export interface Config {
     posts: PostsSelect<false> | PostsSelect<true>;
     media: MediaSelect<false> | MediaSelect<true>;
     categories: CategoriesSelect<false> | CategoriesSelect<true>;
+    skills: SkillsSelect<false> | SkillsSelect<true>;
+    'skill-categories': SkillCategoriesSelect<false> | SkillCategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
+    customs: CustomsSelect<false> | CustomsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -682,6 +688,98 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skills".
+ */
+export interface Skill {
+  id: string;
+  name: string;
+  experience: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+  /**
+   * Ví dụ: "4 years", "6 months"
+   */
+  years: string;
+  /**
+   * Ví dụ: "15+ projects", "2+ projects"
+   */
+  projects: string;
+  /**
+   * Mô tả ngắn về skill này
+   */
+  description: string;
+  category: string | SkillCategory;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-categories".
+ */
+export interface SkillCategory {
+  id: string;
+  title: string;
+  /**
+   * Tên của icon component (ví dụ: Code, Server, Database, Palette)
+   */
+  icon: string;
+  /**
+   * Tailwind CSS gradient classes (ví dụ: from-blue-500 to-indigo-600)
+   */
+  color: string;
+  /**
+   * Chọn các skills thuộc category này
+   */
+  skills?: (string | Skill)[] | null;
+  slug?: string | null;
+  slugLock?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Flexible content you can customize freely.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customs".
+ */
+export interface Custom {
+  id: string;
+  title: string;
+  /**
+   * Unique URL-safe slug (optional).
+   */
+  slug?: string | null;
+  content?: {
+    root: {
+      type: string;
+      children: {
+        type: string;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  media?: (string | Media)[] | null;
+  /**
+   * Key-value JSON for advanced customization.
+   */
+  data?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "redirects".
  */
 export interface Redirect {
@@ -870,8 +968,20 @@ export interface PayloadLockedDocument {
         value: string | Category;
       } | null)
     | ({
+        relationTo: 'skills';
+        value: string | Skill;
+      } | null)
+    | ({
+        relationTo: 'skill-categories';
+        value: string | SkillCategory;
+      } | null)
+    | ({
         relationTo: 'users';
         value: string | User;
+      } | null)
+    | ({
+        relationTo: 'customs';
+        value: string | Custom;
       } | null)
     | ({
         relationTo: 'redirects';
@@ -1143,6 +1253,34 @@ export interface CategoriesSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skills_select".
+ */
+export interface SkillsSelect<T extends boolean = true> {
+  name?: T;
+  experience?: T;
+  years?: T;
+  projects?: T;
+  description?: T;
+  category?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "skill-categories_select".
+ */
+export interface SkillCategoriesSelect<T extends boolean = true> {
+  title?: T;
+  icon?: T;
+  color?: T;
+  skills?: T;
+  slug?: T;
+  slugLock?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "users_select".
  */
 export interface UsersSelect<T extends boolean = true> {
@@ -1163,6 +1301,19 @@ export interface UsersSelect<T extends boolean = true> {
         createdAt?: T;
         expiresAt?: T;
       };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "customs_select".
+ */
+export interface CustomsSelect<T extends boolean = true> {
+  title?: T;
+  slug?: T;
+  content?: T;
+  media?: T;
+  data?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
