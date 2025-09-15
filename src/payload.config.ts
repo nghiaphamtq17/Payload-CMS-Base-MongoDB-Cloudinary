@@ -14,6 +14,10 @@ import { Posts } from './collections/Posts'
 import { Skills } from './collections/Skills'
 import { SkillCategories } from './collections/SkillCategories'
 import { Users } from './collections/Users'
+import { ComponentDefinitions } from './collections/ComponentDefinitions'
+import { DynamicComponents } from './collections/DynamicComponents'
+import { Languages } from './collections/Languages'
+import { Translations } from './collections/Translations'
 import { Footer } from './Footer/config'
 import { Header } from './Header/config'
 import { plugins } from './plugins'
@@ -25,13 +29,16 @@ const dirname = path.dirname(filename)
 
 export default buildConfig({
   admin: {
-    components: {
-      // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below.
-      beforeLogin: ['@/components/BeforeLogin'],
-      // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
-      // Feel free to delete this at any time. Simply remove the line below.
-      beforeDashboard: ['@/components/BeforeDashboard'],
+    // components: {
+    //   // The `BeforeLogin` component renders a message that you see while logging into your admin panel.
+    //   // Feel free to delete this at any time. Simply remove the line below.
+    //   beforeLogin: ['@/components/BeforeLogin'],
+    //   // The `BeforeDashboard` component renders the 'welcome' block that you see after logging into your admin panel.
+    //   // Feel free to delete this at any time. Simply remove the line below.
+    //   beforeDashboard: ['@/components/BeforeDashboard'],
+    // },
+    meta: {
+      titleSuffix: '- BlackMedia CMS',
     },
     importMap: {
       baseDir: path.resolve(dirname),
@@ -65,7 +72,20 @@ export default buildConfig({
   db: mongooseAdapter({
     url: process.env.DATABASE_URI || '',
   }),
-  collections: [Pages, Posts, Media, Categories, Skills, SkillCategories, Users, Custom],
+  collections: [
+    Pages,
+    Posts,
+    Media,
+    Categories,
+    Skills,
+    SkillCategories,
+    Users,
+    Custom,
+    ComponentDefinitions,
+    DynamicComponents,
+    Languages,
+    Translations,
+  ],
   cors: [getServerSideURL()].filter(Boolean),
   globals: [Header, Footer],
   plugins: [

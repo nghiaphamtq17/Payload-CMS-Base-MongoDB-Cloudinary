@@ -75,6 +75,10 @@ export interface Config {
     'skill-categories': SkillCategory;
     users: User;
     customs: Custom;
+    'component-definitions': ComponentDefinition;
+    'dynamic-components': DynamicComponent;
+    languages: Language;
+    translations: Translation;
     redirects: Redirect;
     forms: Form;
     'form-submissions': FormSubmission;
@@ -94,6 +98,10 @@ export interface Config {
     'skill-categories': SkillCategoriesSelect<false> | SkillCategoriesSelect<true>;
     users: UsersSelect<false> | UsersSelect<true>;
     customs: CustomsSelect<false> | CustomsSelect<true>;
+    'component-definitions': ComponentDefinitionsSelect<false> | ComponentDefinitionsSelect<true>;
+    'dynamic-components': DynamicComponentsSelect<false> | DynamicComponentsSelect<true>;
+    languages: LanguagesSelect<false> | LanguagesSelect<true>;
+    translations: TranslationsSelect<false> | TranslationsSelect<true>;
     redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     forms: FormsSelect<false> | FormsSelect<true>;
     'form-submissions': FormSubmissionsSelect<false> | FormSubmissionsSelect<true>;
@@ -197,7 +205,7 @@ export interface Page {
       | null;
     media?: (string | null) | Media;
   };
-  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock)[];
+  layout: (CallToActionBlock | ContentBlock | MediaBlock | ArchiveBlock | FormBlock | DynamicComponentBlock)[];
   meta?: {
     title?: string | null;
     /**
@@ -688,6 +696,231 @@ export interface Form {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DynamicComponentBlock".
+ */
+export interface DynamicComponentBlock {
+  /**
+   * Select a dynamic component to display
+   */
+  component: string | DynamicComponent;
+  /**
+   * Custom CSS classes to apply to this component
+   */
+  customClassName?: string | null;
+  /**
+   * Custom inline styles (JSON object)
+   */
+  customStyles?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  containerSettings?: {
+    /**
+     * Disable the default container wrapper
+     */
+    disableInnerContainer?: boolean | null;
+    maxWidth?:
+      | (
+          | 'full'
+          | 'container'
+          | 'max-w-sm'
+          | 'max-w-md'
+          | 'max-w-lg'
+          | 'max-w-xl'
+          | 'max-w-2xl'
+          | 'max-w-3xl'
+          | 'max-w-4xl'
+          | 'max-w-5xl'
+          | 'max-w-6xl'
+          | 'max-w-7xl'
+        )
+      | null;
+    padding?: ('p-0' | 'p-2' | 'p-4' | 'p-6' | 'p-8' | 'p-12' | 'p-16' | 'p-20') | null;
+  };
+  id?: string | null;
+  blockName?: string | null;
+  blockType: 'dynamicComponent';
+}
+/**
+ * Instances of dynamic components with their data.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dynamic-components".
+ */
+export interface DynamicComponent {
+  id: string;
+  /**
+   * Display name for this component instance
+   */
+  name: string;
+  /**
+   * Select which component type this instance will use
+   */
+  componentDefinition: string | ComponentDefinition;
+  /**
+   * Component data - this will be populated based on the selected component definition
+   */
+  data:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Unique identifier for this component instance
+   */
+  slug?: string | null;
+  /**
+   * Tags to help organize and find components
+   */
+  tags?:
+    | {
+        tag: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Whether this component is published and available for use
+   */
+  isPublished?: boolean | null;
+  /**
+   * Preview image for this component instance
+   */
+  previewImage?: (string | null) | Media;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Define reusable component types that can be used in pages and other content.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "component-definitions".
+ */
+export interface ComponentDefinition {
+  id: string;
+  /**
+   * Internal name for the component (e.g., "Hero", "Card", "Gallery")
+   */
+  name: string;
+  /**
+   * URL-safe identifier (e.g., "hero", "card", "gallery")
+   */
+  slug: string;
+  /**
+   * Brief description of what this component does
+   */
+  description?: string | null;
+  category?: ('layout' | 'content' | 'media' | 'interactive' | 'navigation' | 'form' | 'custom') | null;
+  /**
+   * Icon name from Lucide React (e.g., "image", "layout", "button")
+   */
+  icon?: string | null;
+  /**
+   * Define the fields that this component will have
+   */
+  fields: {
+    /**
+     * Field name (e.g., "title", "description", "image")
+     */
+    name: string;
+    /**
+     * Display label for the field
+     */
+    label?: string | null;
+    type:
+      | 'text'
+      | 'textarea'
+      | 'richText'
+      | 'number'
+      | 'email'
+      | 'url'
+      | 'date'
+      | 'checkbox'
+      | 'select'
+      | 'radioGroup'
+      | 'media'
+      | 'relationship'
+      | 'array'
+      | 'group'
+      | 'json';
+    required?: boolean | null;
+    /**
+     * Default value for the field
+     */
+    defaultValue?: string | null;
+    /**
+     * Placeholder text for input fields
+     */
+    placeholder?: string | null;
+    /**
+     * Help text to display below the field
+     */
+    helpText?: string | null;
+    /**
+     * Options for select and radio group fields
+     */
+    options?:
+      | {
+          label: string;
+          value: string;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Collection name for relationship fields
+     */
+    relationTo?: string | null;
+    hasMany?: boolean | null;
+    /**
+     * Fields for array items
+     */
+    arrayFields?:
+      | {
+          name: string;
+          type: 'text' | 'textarea' | 'number' | 'media' | 'relationship';
+          required?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    /**
+     * Fields for group
+     */
+    groupFields?:
+      | {
+          name: string;
+          type: 'text' | 'textarea' | 'number' | 'media' | 'checkbox';
+          required?: boolean | null;
+          id?: string | null;
+        }[]
+      | null;
+    admin?: {
+      position?: ('default' | 'sidebar') | null;
+      readOnly?: boolean | null;
+      hidden?: boolean | null;
+    };
+    id?: string | null;
+  }[];
+  /**
+   * Preview image for the component in the admin interface
+   */
+  previewImage?: (string | null) | Media;
+  /**
+   * Whether this component is available for use
+   */
+  isActive?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "skills".
  */
 export interface Skill {
@@ -775,6 +1008,83 @@ export interface Custom {
     | number
     | boolean
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quản lý các ngôn ngữ cho website / Manage website languages
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "languages".
+ */
+export interface Language {
+  id: string;
+  /**
+   * Tên ngôn ngữ (VD: English, Tiếng Việt)
+   */
+  name: string;
+  /**
+   * Mã ngôn ngữ (VD: en, vi, fr, de)
+   */
+  code: string;
+  /**
+   * Tên bản địa của ngôn ngữ (VD: English, Tiếng Việt)
+   */
+  nativeName?: string | null;
+  /**
+   * Biểu tượng cờ (VD: 🇺🇸, 🇻🇳)
+   */
+  flag?: string | null;
+  /**
+   * Đặt làm ngôn ngữ mặc định cho website
+   */
+  isDefault?: boolean | null;
+  /**
+   * Ngôn ngữ này có sẵn để sử dụng
+   */
+  isActive?: boolean | null;
+  direction?: ('ltr' | 'rtl') | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Quản lý bản dịch cho nội dung website / Manage content translations
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "translations".
+ */
+export interface Translation {
+  id: string;
+  /**
+   * Khóa bản dịch (VD: hero.title, card.description)
+   */
+  key: string;
+  /**
+   * Ngôn ngữ cho bản dịch này
+   */
+  language: string | Language;
+  /**
+   * Nội dung đã dịch
+   */
+  value: string;
+  /**
+   * Ngữ cảnh hoặc thông tin sử dụng cho bản dịch này
+   */
+  context?: string | null;
+  componentType?: ('dynamic-component' | 'page-content' | 'navigation' | 'form' | 'ui' | 'other') | null;
+  /**
+   * ID của component mà bản dịch này thuộc về
+   */
+  componentId?: string | null;
+  /**
+   * Tên của field mà bản dịch này dành cho
+   */
+  fieldName?: string | null;
+  status?: ('draft' | 'review' | 'approved' | 'published') | null;
+  /**
+   * Ghi chú về bản dịch này
+   */
+  notes?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -984,6 +1294,22 @@ export interface PayloadLockedDocument {
         value: string | Custom;
       } | null)
     | ({
+        relationTo: 'component-definitions';
+        value: string | ComponentDefinition;
+      } | null)
+    | ({
+        relationTo: 'dynamic-components';
+        value: string | DynamicComponent;
+      } | null)
+    | ({
+        relationTo: 'languages';
+        value: string | Language;
+      } | null)
+    | ({
+        relationTo: 'translations';
+        value: string | Translation;
+      } | null)
+    | ({
         relationTo: 'redirects';
         value: string | Redirect;
       } | null)
@@ -1081,6 +1407,7 @@ export interface PagesSelect<T extends boolean = true> {
         mediaBlock?: T | MediaBlockSelect<T>;
         archive?: T | ArchiveBlockSelect<T>;
         formBlock?: T | FormBlockSelect<T>;
+        dynamicComponent?: T | DynamicComponentBlockSelect<T>;
       };
   meta?:
     | T
@@ -1177,6 +1504,24 @@ export interface FormBlockSelect<T extends boolean = true> {
   form?: T;
   enableIntro?: T;
   introContent?: T;
+  id?: T;
+  blockName?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "DynamicComponentBlock_select".
+ */
+export interface DynamicComponentBlockSelect<T extends boolean = true> {
+  component?: T;
+  customClassName?: T;
+  customStyles?: T;
+  containerSettings?:
+    | T
+    | {
+        disableInnerContainer?: T;
+        maxWidth?: T;
+        padding?: T;
+      };
   id?: T;
   blockName?: T;
 }
@@ -1312,6 +1657,117 @@ export interface CustomsSelect<T extends boolean = true> {
   content?: T;
   media?: T;
   data?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "component-definitions_select".
+ */
+export interface ComponentDefinitionsSelect<T extends boolean = true> {
+  name?: T;
+  slug?: T;
+  description?: T;
+  category?: T;
+  icon?: T;
+  fields?:
+    | T
+    | {
+        name?: T;
+        label?: T;
+        type?: T;
+        required?: T;
+        defaultValue?: T;
+        placeholder?: T;
+        helpText?: T;
+        options?:
+          | T
+          | {
+              label?: T;
+              value?: T;
+              id?: T;
+            };
+        relationTo?: T;
+        hasMany?: T;
+        arrayFields?:
+          | T
+          | {
+              name?: T;
+              type?: T;
+              required?: T;
+              id?: T;
+            };
+        groupFields?:
+          | T
+          | {
+              name?: T;
+              type?: T;
+              required?: T;
+              id?: T;
+            };
+        admin?:
+          | T
+          | {
+              position?: T;
+              readOnly?: T;
+              hidden?: T;
+            };
+        id?: T;
+      };
+  previewImage?: T;
+  isActive?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "dynamic-components_select".
+ */
+export interface DynamicComponentsSelect<T extends boolean = true> {
+  name?: T;
+  componentDefinition?: T;
+  data?: T;
+  slug?: T;
+  tags?:
+    | T
+    | {
+        tag?: T;
+        id?: T;
+      };
+  isPublished?: T;
+  previewImage?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "languages_select".
+ */
+export interface LanguagesSelect<T extends boolean = true> {
+  name?: T;
+  code?: T;
+  nativeName?: T;
+  flag?: T;
+  isDefault?: T;
+  isActive?: T;
+  direction?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "translations_select".
+ */
+export interface TranslationsSelect<T extends boolean = true> {
+  key?: T;
+  language?: T;
+  value?: T;
+  context?: T;
+  componentType?: T;
+  componentId?: T;
+  fieldName?: T;
+  status?: T;
+  notes?: T;
   updatedAt?: T;
   createdAt?: T;
 }
