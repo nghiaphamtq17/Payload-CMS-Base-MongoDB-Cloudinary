@@ -1,6 +1,7 @@
 'use client'
 import { useHeaderTheme } from '@/providers/HeaderTheme'
 import Link from 'next/link'
+import Image from 'next/image'
 import { usePathname } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
@@ -29,12 +30,31 @@ export const HeaderClient: React.FC<HeaderClientProps> = ({ data }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [headerTheme])
 
+  const showLogo = (data as any)?.showLogo ?? true
+  const logo = (data as any)?.logo
+  const logoHref = (data as any)?.logoHref || '/'
+  const logoHeight = Number((data as any)?.logoHeight || 32)
+  const logoWidth = Number((data as any)?.logoWidth || 120)
+
   return (
     <header className="container relative z-20   " {...(theme ? { 'data-theme': theme } : {})}>
       <div className="py-8 flex justify-between">
-        <Link href="/">
-          <Logo loading="eager" priority="high" className="invert dark:invert-0" />
-        </Link>
+        {showLogo && (
+          <Link href={logoHref}>
+            {logo && typeof logo !== 'string' && logo?.url ? (
+              <Image
+                src={logo.url}
+                alt={logo.alt || 'Header Logo'}
+                width={logoWidth}
+                height={logoHeight}
+                className="h-8 w-auto object-contain invert dark:invert-0"
+                priority
+              />
+            ) : (
+              <Logo loading="eager" priority="high" className="invert dark:invert-0" />
+            )}
+          </Link>
+        )}
         <HeaderNav data={data} />
       </div>
     </header>

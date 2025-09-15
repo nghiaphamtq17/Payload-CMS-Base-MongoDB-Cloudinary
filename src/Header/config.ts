@@ -10,6 +10,53 @@ export const Header: GlobalConfig = {
   },
   fields: [
     {
+      name: 'showLogo',
+      type: 'checkbox',
+      label: 'Show Logo',
+      defaultValue: true,
+    },
+    {
+      name: 'logo',
+      type: 'upload',
+      relationTo: 'media',
+      admin: {
+        description:
+          'Optional custom logo for header. If empty, the default Logo component is used.',
+        condition: (_, siblingData) => Boolean(siblingData?.showLogo),
+      },
+    },
+    {
+      name: 'logoHref',
+      type: 'text',
+      label: 'Logo link',
+      defaultValue: '/',
+      admin: {
+        condition: (_, siblingData) => Boolean(siblingData?.showLogo),
+      },
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'logoHeight',
+          type: 'number',
+          label: 'Logo height (px)',
+          defaultValue: 32,
+          admin: { width: '50%' },
+        },
+        {
+          name: 'logoWidth',
+          type: 'number',
+          label: 'Logo width (px)',
+          defaultValue: 120,
+          admin: { width: '50%' },
+        },
+      ],
+      admin: {
+        condition: (_, siblingData) => Boolean(siblingData?.showLogo),
+      },
+    },
+    {
       name: 'navItems',
       type: 'array',
       fields: [

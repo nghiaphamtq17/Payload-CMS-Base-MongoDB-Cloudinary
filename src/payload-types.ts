@@ -2032,6 +2032,14 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
  */
 export interface Header {
   id: string;
+  showLogo?: boolean | null;
+  /**
+   * Optional custom logo for header. If empty, the default Logo component is used.
+   */
+  logo?: (string | null) | Media;
+  logoHref?: string | null;
+  logoHeight?: number | null;
+  logoWidth?: number | null;
   navItems?:
     | {
         link: {
@@ -2061,23 +2069,42 @@ export interface Header {
  */
 export interface Footer {
   id: string;
-  navItems?:
+  showLogo?: boolean | null;
+  /**
+   * Optional custom logo for footer. If empty, the default Logo component is used.
+   */
+  logo?: (string | null) | Media;
+  logoHref?: string | null;
+  layout?: {
+    columnsOnMobile?: ('1' | '2') | null;
+    columnsOnDesktop?: ('2' | '3' | '4' | '5' | '6') | null;
+    showThemeSwitcher?: boolean | null;
+  };
+  columns?:
     | {
-        link: {
-          type?: ('reference' | 'custom') | null;
-          newTab?: boolean | null;
-          reference?:
-            | ({
-                relationTo: 'pages';
-                value: string | Page;
-              } | null)
-            | ({
-                relationTo: 'posts';
-                value: string | Post;
-              } | null);
-          url?: string | null;
-          label: string;
-        };
+        title?: string | null;
+        items?:
+          | {
+              link: {
+                type?: ('reference' | 'custom') | null;
+                newTab?: boolean | null;
+                reference?:
+                  | ({
+                      relationTo: 'pages';
+                      value: string | Page;
+                    } | null)
+                  | ({
+                      relationTo: 'posts';
+                      value: string | Post;
+                    } | null);
+                url?: string | null;
+                label: string;
+              };
+              id?: string | null;
+            }[]
+          | null;
+        maxItemsMobile?: number | null;
+        maxItemsDesktop?: number | null;
         id?: string | null;
       }[]
     | null;
@@ -2089,6 +2116,11 @@ export interface Footer {
  * via the `definition` "header_select".
  */
 export interface HeaderSelect<T extends boolean = true> {
+  showLogo?: T;
+  logo?: T;
+  logoHref?: T;
+  logoHeight?: T;
+  logoWidth?: T;
   navItems?:
     | T
     | {
@@ -2112,18 +2144,36 @@ export interface HeaderSelect<T extends boolean = true> {
  * via the `definition` "footer_select".
  */
 export interface FooterSelect<T extends boolean = true> {
-  navItems?:
+  showLogo?: T;
+  logo?: T;
+  logoHref?: T;
+  layout?:
     | T
     | {
-        link?:
+        columnsOnMobile?: T;
+        columnsOnDesktop?: T;
+        showThemeSwitcher?: T;
+      };
+  columns?:
+    | T
+    | {
+        title?: T;
+        items?:
           | T
           | {
-              type?: T;
-              newTab?: T;
-              reference?: T;
-              url?: T;
-              label?: T;
+              link?:
+                | T
+                | {
+                    type?: T;
+                    newTab?: T;
+                    reference?: T;
+                    url?: T;
+                    label?: T;
+                  };
+              id?: T;
             };
+        maxItemsMobile?: T;
+        maxItemsDesktop?: T;
         id?: T;
       };
   updatedAt?: T;
